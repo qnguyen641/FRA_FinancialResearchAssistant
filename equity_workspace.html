@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora — Equity Research Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.3.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1B4D38;--primary-l:rgba(27,77,56,.08);--accent:#4A7C59;
+  --green:#2E7D32;--green2:rgba(46,125,50,.1);--red:#C62828;--red2:rgba(198,40,40,.1);
+  --amber:#B45309;--amber2:rgba(180,83,9,.09);
+  --bg-canvas:#EDE5D8;--bg:#F5F0E8;--surface:#FFFFFF;
+  --border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.05);
+  --text:#1A1A1A;--text2:#3D3D3D;--text3:#6B6B6B;--text4:#9A9A9A;
+  --r-card:3px;--r-input:2px;
+}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;background:var(--bg-canvas);color:var(--text);height:100vh;display:flex;overflow:hidden}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#A8C4B2;border-radius:999px}::-webkit-scrollbar-track{background:transparent}
+/* sidebar */
+.sidebar{width:236px;min-width:236px;background:var(--surface);display:flex;flex-direction:column;height:100vh;box-shadow:1px 0 0 rgba(0,0,0,.09)}
+.logo-wrap{padding:18px 16px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--primary-l);border:1px solid rgba(27,77,56,.2);border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:19px}
+.logo-name{font-weight:800;font-size:13.5px;letter-spacing:-.01em}.logo-sub{font-size:10px;color:rgba(0,0,0,.4);margin-top:1px}
+.nav-section{padding:10px 8px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;color:rgba(0,0,0,.38);text-transform:uppercase;letter-spacing:.1em;font-weight:800;padding:0 8px;margin:8px 0 6px}
+.nav-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:6px;color:rgba(0,0,0,.55);cursor:pointer;margin-bottom:3px;transition:.15s}
+.nav-item:hover{background:rgba(0,0,0,.04)}
+.nav-item.active{background:var(--primary-l);color:var(--primary);border-left:2px solid var(--primary);padding-left:8px}
+.nav-item .t{font-weight:700;font-size:13px}.nav-item .n{font-size:10.5px;color:var(--text4);margin-top:1px}
+.nav-item .px{text-align:right}.nav-item .p{font-size:12px;font-variant-numeric:tabular-nums;color:var(--text2)}.nav-item .c{font-size:10.5px;font-variant-numeric:tabular-nums}
+.up{color:var(--green)}.dn{color:var(--red)}
+.sidebar-footer{padding:12px 14px;border-top:1px solid rgba(0,0,0,.08);display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text4)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 2px rgba(74,124,89,.25)}50%{box-shadow:0 0 0 5px rgba(74,124,89,.08)}}
+/* main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:56px;background:var(--surface);border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 26px;gap:10px;flex-shrink:0}
+.tb-l{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.tb-l h1{font-size:16px;font-weight:800;letter-spacing:-.01em}.tb-l .tk{font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.06em}
+.tb-r{display:flex;align-items:center;gap:10px}
+.tb-price{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:2px}
+.chip.up{background:var(--green2);color:#1B5E20}.chip.dn{background:var(--red2);color:#991B1B}
+.rbadge{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:2px}
+.rb-green{background:var(--green2);color:#1B5E20}.rb-amber{background:var(--amber2);color:#92400E}.rb-red{background:var(--red2);color:#991B1B}
+.export-btn{border:1px solid rgba(27,77,56,.3);background:var(--primary-l);border-radius:var(--r-input);padding:8px 13px;font-size:11px;font-weight:800;letter-spacing:.03em;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit}
+.export-btn:hover{background:rgba(27,77,56,.15)}
+.export-btn.solid{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* page */
+.page{flex:1;overflow-y:auto;padding:24px 26px;display:flex;flex-direction:column;gap:22px}
+.section-hd{display:flex;align-items:center;gap:14px;border-left:3px solid var(--primary);padding-left:12px}
+.section-hd span{font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;color:var(--text)}
+.research-box{display:flex;gap:6px;padding:0 4px 4px}
+.research-box input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-input);padding:8px 10px;font-size:12px;font-family:inherit;color:var(--text)}
+.research-box button{border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:var(--r-input);padding:0 11px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit}
+.pipe-wrap{display:flex;justify-content:center;padding:34px 0}
+.pipe-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:26px 28px;max-width:560px;width:100%}
+.pipe-h{font-size:19px;font-weight:800;display:flex;align-items:center;gap:9px}.pipe-h i{color:var(--primary)}
+.pipe-sub{font-size:12px;color:var(--text4);margin:5px 0 18px}
+.pstep{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--border2);opacity:.42;transition:opacity .25s}
+.pstep:first-child{border-top:none}.pstep.run,.pstep.done{opacity:1}
+.pstep .pdot{color:var(--text4);font-size:18px;display:flex}.pstep.done .pdot{color:var(--primary)}
+.pstep .pl{font-size:13.5px;font-weight:700}.pstep .pd{font-size:11px;color:var(--text4)}
+.pstep .pstat{margin-left:auto;color:var(--primary);font-size:16px;display:flex;min-width:18px;justify-content:center}
+.spin{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.section-hd .prov{margin-left:auto}
+.section-hd::after{content:'';flex:0;width:0}
+.prov{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:2px;border:1px solid var(--border);display:inline-flex;align-items:center;gap:3px;color:var(--text4);background:rgba(0,0,0,.02)}
+.prov i{font-size:9px}.prov.det{color:var(--primary);border-color:rgba(27,77,56,.3);background:var(--primary-l)}
+.cards{display:grid;gap:18px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1050px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
+@media(max-width:680px){.sidebar{display:none}.g4{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:20px}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.card-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--text4)}
+.card-value{font-size:clamp(18px,2vw,25px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-top:12px;font-variant-numeric:tabular-nums}
+.card-sub{font-size:10.5px;color:var(--text3);margin-top:5px}
+.stat-icon{width:36px;height:36px;border-radius:var(--r-card);background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon i{font-size:18px;color:rgba(255,255,255,.92)}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:20px}
+.chart-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-20px -20px 18px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg-canvas);border-radius:var(--r-card) var(--r-card) 0 0}
+.chart-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+.chart-title .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--text4);font-size:10px}
+.chart-wrap{position:relative;height:230px}.chart-wrap-sm{position:relative;height:175px}
+.chart-wrap canvas{width:100%!important;height:100%!important;display:block}
+.ohlc-readout{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:11px;color:var(--text3);margin-bottom:10px}
+.ohlc-readout b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.period-btns{display:flex;gap:2px;background:rgba(0,0,0,.06);border-radius:var(--r-input);padding:3px}
+.period-btn{font-size:10px;padding:4px 10px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-family:inherit;font-weight:700;border-radius:2px}
+.period-btn.active{background:var(--surface);color:var(--text);border-bottom:2px solid var(--primary)}
+.thesis{border:1px solid var(--border);border-left:3px solid var(--amber);background:#fcfaf4;border-radius:0 var(--r-card) var(--r-card) 0;padding:14px 16px;font-size:13.5px;line-height:1.7}
+.thesis .fig,p .fig{font-weight:700}
+p.prose{line-height:1.7;margin-bottom:11px;font-size:13px}p.prose:last-child{margin-bottom:0}
+sup.c{color:var(--primary);font-weight:800;font-size:9px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mini .v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}.mini .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-top:2px}
+table.dt{width:100%;border-collapse:collapse;font-size:11.5px}
+table.dt th{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);font-weight:800;padding:9px 10px;text-align:right;border-bottom:1px solid var(--border);background:rgba(0,0,0,.02)}
+table.dt th:first-child,table.dt td:first-child{text-align:left}
+table.dt td{padding:9px 10px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums}
+table.dt td:first-child{color:var(--text3)}table.dt tr:last-child td{border-bottom:none}
+.subh{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text4);margin-bottom:7px}
+.vtrack{position:relative;height:7px;background:rgba(0,0,0,.08);border-radius:5px;margin:30px 0 8px}
+.vband{position:absolute;height:7px;background:var(--primary);border-radius:5px}
+.vt{position:absolute;top:-6px;width:2px;height:19px;background:var(--text)}
+.vt.base{background:var(--primary);width:3px}.vt.price{background:var(--amber)}
+.vt .cap{position:absolute;top:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:var(--text3)}
+.vt.price .cap{color:var(--amber);font-weight:700}
+.vends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text4)}
+ul.list{list-style:none}ul.list li{padding:8px 0;border-top:1px solid var(--border2);font-size:12.5px;display:flex;gap:9px;line-height:1.5}
+ul.list li:first-child{border-top:none}ul.list li .mk{color:var(--primary);font-weight:800;flex-shrink:0}
+.news{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border2)}.news:first-of-type{border-top:none}
+.news .stripe{width:3px;border-radius:2px;flex-shrink:0}.stripe.pos{background:var(--green)}.stripe.neg{background:var(--red)}.stripe.neu{background:var(--text4)}
+.news .hd{font-size:12.5px;font-weight:600;line-height:1.4}.news .mt{font-size:10.5px;color:var(--text4);margin-top:3px}
+.tag{font-size:9px;font-weight:800;text-transform:uppercase;padding:1px 6px;border-radius:2px;margin-left:6px}
+.tag.pos{background:var(--green2);color:#1B5E20}.tag.neg{background:var(--red2);color:#991B1B}.tag.neu{background:rgba(0,0,0,.06);color:var(--text3)}
+.cat{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--border2);font-size:12.5px}.cat:first-child{border-top:none}.cat .meta{font-size:10.5px;color:var(--text4);white-space:nowrap}
+.alert{border:1px solid var(--border);border-radius:var(--r-card);padding:13px 15px;background:var(--surface);display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.alert:last-child{margin-bottom:0}
+.alert-strip{width:4px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.alert-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.alert-body{font-size:11.5px;color:var(--text2);margin-top:3px;line-height:1.5}
+.ill{font-size:10px;color:var(--text4);font-style:italic}
+.foot-src{font-size:10px;color:var(--text4);margin-top:10px;line-height:1.5}
+/* report */
+#report{display:none}
+body.reportmode .page#dash{display:none}
+body.reportmode #report{display:flex;flex-direction:column;flex:1;overflow-y:auto;padding:20px 26px}
+.rtoolbar{max-width:840px;margin:0 auto 0;width:100%;display:flex;justify-content:space-between;padding-bottom:14px}
+.doc{max-width:840px;margin:0 auto;background:#fff;border:1px solid var(--border);padding:46px 54px}
+.doc .cover{background:#1A3D2A;color:#fff;border-radius:var(--r-card);padding:36px 30px;text-align:center;margin-bottom:24px}
+.doc .cover .er{color:#C4B47A;letter-spacing:.2em;font-size:11px;font-weight:800}
+.doc .cover h1{font-size:32px;margin:8px 0 4px;font-weight:900;letter-spacing:-.02em}
+.doc .cover .tk{color:#aebfb4;font-size:13px}.doc .cover .rt{color:#C4B47A;font-weight:800;font-size:17px;margin-top:14px}
+.doc .cover .ct{color:#d6e0d8;font-size:12.5px}.doc .cover .dt{color:#8ea99a;font-size:11px;margin-top:9px}
+.doc h2.s{color:var(--primary);font-size:18px;margin:24px 0 9px;padding-bottom:6px;border-bottom:2px solid var(--border);font-weight:800}
+.doc h3.s{font-size:13px;margin:14px 0 5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.doc p{line-height:1.7;margin-bottom:10px;font-size:13px}
+.doc .kvbox{border:1px solid #ecdcb8;background:#fcfaf4;border-radius:var(--r-card);padding:13px 15px;font-size:13px;line-height:1.7}
+.doc .disc{margin-top:22px;padding-top:12px;border-top:1px solid var(--border);color:var(--text4);font-size:10px;line-height:1.6}
+@media print{.sidebar,.topbar,.rtoolbar{display:none!important}body{display:block;height:auto;overflow:visible}.doc{border:none;margin:0;max-width:none;padding:0}body.reportmode #report{padding:0}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo-wrap"><div class="logo-icon"><i class="ti ti-chart-candle"></i></div>
+    <div><div class="logo-name">Aurora</div><div class="logo-sub">Equity Research</div></div></div>
+  <div class="nav-section">
+    <div class="nav-label">Live research</div>
+    <div class="research-box">
+      <input id="tkInput" placeholder="Type a ticker… e.g. MSFT" onkeydown="if(event.key==='Enter')runResearch()" />
+      <button onclick="runResearch()"><i class="ti ti-search"></i>Run</button>
+    </div>
+    <div class="nav-label" style="margin-top:14px">Coverage</div><div id="wl"></div>
+  </div>
+  <div class="sidebar-footer"><span class="live-dot"></span><span>Mock demo · illustrative price &amp; news</span></div>
+</aside>
+<div class="main">
+  <div class="topbar" id="topbar"></div>
+  <div class="page" id="dash"></div>
+  <div id="report"></div>
+</div>
+
+<script>
+const DATA = {
+ "AAPL":{name:"Apple Inc.",ticker:"AAPL",exchange:"NASDAQ",sector:"Technology",cur:"$",
+   price:255.4,dayChange:-0.012,rating:"Overvalued",ratingClass:"red",
+   target:231,fairLow:223,fairHigh:239,fairMethod:"peer P/E 28–30× · 2025E EPS $7.94",
+   metrics:[["Market cap","$3.86T"],["P/E (fwd)","34.1x"],["P/B ratio","51.8x"],["ROE","151.9%"],["Div yield","0.40%"],["52W range","$198–$262"]],
+   thesis:`Apple maintains robust financial health, with revenue projected at a <span class="fig">3.3% CAGR</span> through 2027 and EBITDA margin forecast toward <span class="fig">44.8% by 2027</span>. Contribution margin keeps improving on disciplined cost management and EPS is expected to grow consistently. The tension is valuation: at 34× forward earnings the shares already price in much of this, and our model puts fair value below the current price.`,
+   overview:[`Apple Inc. is a global technology leader spanning hardware, software and a fast-growing services ecosystem — iPhone, iPad, Mac, Apple Watch and AirPods, complemented by the App Store, Apple Music, iCloud, Apple TV+ and Apple Pay. The integrated model fosters loyalty and recurring services revenue.`,
+     `Revenue reached <span class="fig">$416.2B in 2025</span> (+6.4%), with consensus near $482B by 2027. Contribution margin has risen from 41.8% (2021) to 46.9% (2025), EBITDA margins are expanding, and EPS reached $7.49. Strategic focus on high-margin services, ecosystem expansion and cost control underpins the outlook, alongside heavy AI, wearables and AR investment.`],
+   chartRev:{years:["2021","2022","2023","2024","2025"],bars:[365.8,394.3,383.3,391.0,416.2],line:[123.1,133.1,129.2,134.9,144.4],lblBar:"Revenue $B",lblLine:"EBITDA $B"},
+   chartEps:{years:["2021","2022","2023","2024","2025"],a:[5.67,6.15,6.16,6.11,7.49],b:[25.92,24.44,27.79,37.29,34.09],la:"EPS $",lb:"P/E x"},
+   income:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Revenue",["$365.8B","$394.3B","$383.3B","$391.0B","$416.2B"]],["SG&A",["$22.0B","$25.1B","$24.9B","$26.1B","$27.6B"]],
+     ["Contribution profit",["$152.8B","$170.8B","$169.1B","$180.7B","$195.2B"]],["Contribution margin",["41.8%","43.3%","44.1%","46.2%","46.9%"]],
+     ["EBITDA",["$123.1B","$133.1B","$129.2B","$134.9B","$144.4B"]],["EBITDA margin",["33.7%","33.8%","33.7%","34.5%","34.7%"]],
+     ["Revenue growth",["—","7.8%","-2.8%","2.0%","6.4%"]],["EPS",["5.67","6.15","6.16","6.11","7.49"]],["P/E ratio",["25.92","24.44","27.79","37.29","34.09"]]]},
+   credit:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Debt / equity",["2.16","2.61","1.99","2.09","1.52"]],["Debt / assets",["0.39","0.38","0.35","0.33","0.31"]],
+     ["Interest coverage",["41.2x","40.7x","29.1x","0.0x","0.0x"]],["Net margin",["25.9%","25.3%","25.3%","24.0%","26.9%"]],
+     ["Current ratio",["1.07","0.88","0.99","0.87","0.89"]],["CF / debt",["0.76","0.92","0.89","0.99","0.99"]]]},
+   valuation:`Apple trades at a 2025E P/E of ~34×, above its 24–28× three-year range and most large-cap tech peers. Applying a <span class="fig">28–30×</span> fair multiple to 2025E EPS of $7.94 implies fair value of <span class="fig">$223–$239</span> per share — so the shares look modestly overvalued against both peers and Apple's ~3.3% revenue growth outlook.<sup class="c">[3]</sup>`,
+   peers:{title:"EV/EBITDA (AAPL)",cats:["2021","2022","2023","2024","2025"],vals:[20.75,19.14,21.59,26.56,26.97],note:"Software peers (MSFT, GOOGL) 25–35× fwd P/E; hardware peers (HP, Dell) 10–15×."},
+   sens:{assumptions:[["2025E rev growth","5.0%"],["2025E EBITDA margin","41.8%"],["2026E rev growth","6.0%"],["2026E EBITDA margin","43.3%"],["2027E rev growth","4.0%"],["2027E EBITDA margin","44.8%"]],
+     ci:[["Revenue (95%)","$340.1B – $623.3B"],["EBITDA (95%)","$152.4B – $279.3B"]]},
+   newsSummary:`Apple is in the spotlight after its 2026 WWDC keynote unveiling an AI-powered Siri and tighter Alphabet integration. Despite positive reviews, shares slipped — the market wanted a bigger reveal, and new Siri features won't reach the EU or China immediately. App Store policy changes could lift services revenue. Sentiment is split: X positive, Reddit cautious.<sup class="c">[4]</sup>`,
+   news:[{d:"2026-06-08",s:"Wedbush",t:"pos",h:"WWDC marks the start of Apple's AI consumer-platform shift"},
+         {d:"2026-06-08",s:"Reuters",t:"neg",h:"Apple shares slip post-keynote as AI reveal underwhelms expectations"},
+         {d:"2026-06-08",s:"Dev News",t:"neu",h:"Apple to delist low-engagement apps; enables cross-app bundles"},
+         {d:"2026-06-07",s:"Ca$htags",t:"neu",h:"AAPL faces a key AI test at WWDC 2026"}],
+   catalysts:[["WWDC 2026 / AI platform launch","2026-06-08 · medium · 70%"],["Expected quarterly earnings","2026-09-07 · medium"]],
+   risks:["Slowing revenue growth — ~3.3% CAGR with recent years fluctuating (-2.8% in 2023, +2.0% in 2024).",
+          "High valuation risk — P/E rose from ~25× (2021) to 34–37×, exposing downside if growth disappoints.",
+          "Margin pressure — cost overruns or competition could undercut projected margin expansion.",
+          "Earnings stagnation — EPS roughly flat 2022–2024 (6.15 / 6.16 / 6.11) before 2025's step up.",
+          "Dependence on forecast improvement — the case leans on EBITDA margin reaching 44.8% by 2027."],
+   takeaways:["Revenue growth shows consistent, if moderating, trends.","Gross and contribution margins demonstrate operational effectiveness.",
+              "SG&A discipline keeps support costs falling as a share of sales.","EBITDA-margin stability reflects strong fundamentals."],
+   checks:[{level:"alert",code:"Margin jump",message:"Forecast 2026E EBITDA margin (43.3%) jumps from the 34.7% 2025A actual — verify before relying on the projection."},
+           {level:"warning",code:"Data quality",message:"Interest coverage reads 0.0x for 2024–2025 — a likely source-data gap; confirm before publishing."},
+           {level:"warning",code:"Confidence interval",message:"Source returned N/A for the 95% forecast intervals — flagged as incomplete, not silently dropped."},
+           {level:"ok",code:"Net margin",message:"Net margin 26.9% is consistent with the five-year history."}],
+   citations:["Apple FY2025 Form 10-K — MD&A, Growth Drivers, p.24","Apple FY2025 Form 10-K — Item 1A Risk Factors, p.9","FMP / Company Filings — statements & multiples","WWDC 2026 keynote coverage — aggregated press"]},
+
+ "D05.SI":{name:"DBS Group Holdings",ticker:"D05.SI",exchange:"SGX",sector:"Banking",cur:"S$",
+   price:38.5,dayChange:0.008,rating:"Undervalued",ratingClass:"green",
+   target:71.7,fairLow:62.21,fairHigh:85.88,fairMethod:"5-year DCF · WACC 10% · terminal g 2.5%",
+   metrics:[["Market cap","S$109B"],["P/E (fwd)","9.8x"],["P/B ratio","1.61x"],["ROE","16.5%"],["Div yield","5.6%"],["52W range","S$31–S$41"]],
+   thesis:`DBS screens as a high-quality franchise trading well below intrinsic value. Our DCF of <span class="fig">S$71.70</span> sits ~86% above the current S$38.50, supported by a <span class="fig">16.5% ROE</span>, 53.8% net margin and operating cash flow at 105% of earnings. The 6% forward growth assumption is below the 8% historical CAGR, so the valuation does not rely on heroic inputs.`,
+   overview:[`DBS is Southeast Asia's largest bank by assets, spanning consumer banking, wealth management and institutional banking across Singapore, Hong Kong, China, India and Indonesia. A digital-first model and a deep, low-cost deposit base make it one of the region's most profitable banks.`,
+     `Revenue reached <span class="fig">S$20.8B in 2025</span> on steady loan and fee growth, with net income of S$11.2B. Returns widened as rates rose; durable wealth-management fee income and a conservative balance sheet underpin the case.`],
+   chartRev:{years:["2021","2022","2023","2024","2025"],bars:[15200,16500,18200,19600,20800],line:[8100,8900,9600,10500,11200],lblBar:"Revenue S$m",lblLine:"Net income S$m"},
+   chartEps:{years:["2021","2022","2023","2024","2025"],a:[2.85,3.13,3.38,3.70,3.94],b:[11.2,10.6,10.1,9.9,9.8],la:"EPS S$",lb:"P/E x"},
+   income:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Revenue (S$m)",["15,200","16,500","18,200","19,600","20,800"]],["Net income (S$m)",["8,100","8,900","9,600","10,500","11,200"]],
+     ["Net margin",["53.3%","53.9%","52.7%","53.6%","53.8%"]],["EPS (S$)",["2.85","3.13","3.38","3.70","3.94"]],
+     ["P/E ratio",["11.2","10.6","10.1","9.9","9.8"]],["Revenue growth",["—","8.6%","10.3%","7.7%","6.1%"]]]},
+   credit:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Debt / equity",["0.71","0.68","0.66","0.62","0.60"]],["ROE",["14.9%","15.2%","15.6%","16.1%","16.5%"]],
+     ["ROA",["1.10%","1.20%","1.25%","1.30%","1.37%"]],["CET1 ratio",["14.1%","14.4%","14.6%","15.0%","15.2%"]],["Cost / income",["43%","42%","41%","40%","39%"]]]},
+   valuation:`At ~9.8× forward earnings and 1.6× book, DBS trades below regional peers (OCBC ~9.1×, UOB ~8.9× P/E) despite a sector-leading 16.5% ROE. Our base-case DCF of <span class="fig">S$71.70</span> (range S$62.21–85.88) implies meaningful upside; the low multiple appears to over-discount NIM normalisation the cash flows already absorb.<sup class="c">[3]</sup>`,
+   peers:{title:"Forward P/E (peers)",cats:["DBS","OCBC","UOB"],vals:[9.8,9.1,8.9],note:"Singapore banks cluster at 9–10× fwd P/E; DBS commands a modest premium on higher ROE."},
+   sens:{assumptions:[["FCF growth","6.0%"],["WACC","10.0%"],["Terminal growth","2.5%"],["Forecast horizon","5 years"]],
+     ci:[["DCF range","S$62.21 – S$85.88"],["Implied upside","+62% to +123%"]]},
+   newsSummary:`DBS lifted its quarterly dividend as wealth-management inflows accelerated, reinforcing the fee-income story. Sector attention is on net-interest-margin normalisation as the rate-cut cycle nears, though DBS's deposit franchise and capital strength leave it well positioned.`,
+   news:[{d:"2 days ago",s:"Reuters",t:"pos",h:"DBS lifts quarterly dividend as wealth-management inflows accelerate"},
+         {d:"5 days ago",s:"Bloomberg",t:"neu",h:"Singapore banks brace for NIM normalisation as rate cuts near"},
+         {d:"1 week ago",s:"Straits Times",t:"pos",h:"DBS expands India digital-banking footprint with new licences"},
+         {d:"2 weeks ago",s:"MAS",t:"neu",h:"Regulator flags system-wide credit-cost vigilance for 2026"}],
+   catalysts:[["Q2 results","2026-08-07 · medium"],["Interim dividend ex-date","2026-07-18 · low"]],
+   risks:["Net interest income sensitivity to rate moves as the cut cycle approaches.","Credit costs and loan losses if the macro backdrop deteriorates.",
+          "Concentration in Singapore, Hong Kong and China macro conditions.","Wealth-fee income tied to market levels and client risk appetite."],
+   takeaways:["Sector-leading ROE at a below-peer multiple.","Conservative capital and liquidity ratios.","Cash flow covers reported earnings (105%).","Valuation does not rely on aggressive growth."],
+   checks:[{level:"ok",code:"CFO vs NI",message:"Operating cash flow is 105% of net income — earnings quality is sound."},
+           {level:"ok",code:"Growth",message:"Forward growth 6% is consistent with the 8% historical CAGR."},
+           {level:"ok",code:"Leverage",message:"Debt/equity of 0.60x is comfortable for the franchise."}],
+   citations:["DBS FY2025 Annual Report — MD&A, Growth Drivers, p.34","DBS FY2025 Annual Report — Risk Factors, p.58","SGX filings / internal DCF model","Company disclosures & press"]},
+
+ "FPT":{name:"FPT Corporation",ticker:"FPT",exchange:"HOSE",sector:"Information Technology",cur:"₫",
+   price:135000,dayChange:0.016,rating:"Under review",ratingClass:"amber",
+   target:null,fairLow:null,fairHigh:null,fairMethod:"DCF withheld — growth assumption flagged",
+   metrics:[["Market cap","₫198T"],["P/E (fwd)","19.8x"],["P/B ratio","5.4x"],["ROE","27.4%"],["Div yield","1.5%"],["52W range","₫98k–₫142k"]],
+   thesis:`FPT pairs a fast-growing global IT-services and software-outsourcing arm with domestic telecoms and education. The export engine rides global digital-transformation and AI demand. The story is <span class="fig">high growth at scale</span> — but management's >20%/yr ambition runs ahead of the 12% historical CAGR, so our model parks the valuation under review until the input is justified.`,
+   overview:[`FPT Corporation is Vietnam's largest technology company, operating in IT services and software outsourcing, telecommunications and education. The export-led services business serves clients in Japan, the US and Europe and has compounded revenue at double digits.`,
+     `Revenue reached <span class="fig">₫62,000B in 2025</span> with net income of ₫9,300B and a 15% net margin. Returns are strong (27.4% ROE) and cash flow funds delivery-capacity expansion — though the headline question is whether the >20% growth target holds if global IT budgets tighten.`],
+   chartRev:{years:["2021","2022","2023","2024","2025"],bars:[35700,44000,52600,57500,62000],line:[5300,6500,7800,8700,9300],lblBar:"Revenue ₫bn",lblLine:"Net income ₫bn"},
+   chartEps:{years:["2021","2022","2023","2024","2025"],a:[4.6,5.2,5.7,6.0,6.33],b:[16.5,18.2,19.0,20.1,19.8],la:"EPS ₫'000",lb:"P/E x"},
+   income:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Revenue (₫bn)",["35,700","44,000","52,600","57,500","62,000"]],["Net income (₫bn)",["5,300","6,500","7,800","8,700","9,300"]],
+     ["Net margin",["14.8%","14.8%","14.8%","15.1%","15.0%"]],["EPS (₫'000)",["4.60","5.20","5.70","6.00","6.33"]],
+     ["P/E ratio",["16.5","18.2","19.0","20.1","19.8"]],["Revenue growth",["—","23.2%","19.5%","9.3%","7.8%"]]]},
+   credit:{years:["2021A","2022A","2023A","2024A","2025A"],rows:[
+     ["Debt / equity",["0.61","0.58","0.55","0.53","0.53"]],["ROE",["24.1%","25.3%","26.4%","27.0%","27.4%"]],
+     ["ROA",["11.5%","12.0%","12.4%","12.7%","12.9%"]],["Current ratio",["1.30","1.30","1.35","1.40","1.40"]]]},
+   valuation:`FPT trades at ~19.8× forward earnings, below global IT-services peers (Infosys ~24×, TCS ~27×) but at a premium to the local market on its growth profile. A DCF is computable, but our verification gate <span class="fig">withholds a target</span>: the 24% growth assumption is well above the 12% historical CAGR, so any intrinsic value inherits that unverified input.<sup class="c">[3]</sup>`,
+   peers:{title:"Forward P/E (peers)",cats:["FPT","Infosys","TCS"],vals:[19.8,24.0,27.0],note:"Global IT-services peers trade at 24–27×; FPT's discount reflects market and liquidity, not growth."},
+   sens:{assumptions:[["Assumed FCF growth","24.0%"],["Historical CAGR","12.0%"],["WACC","10.0%"],["Terminal growth","2.5%"]],
+     ci:[["Status","DCF withheld pending review"],["Trigger","Growth > 1.5× historical CAGR"]]},
+   newsSummary:`FPT signed a multi-year AI services agreement with a Japanese partner and opened a new delivery centre to ease its engineer-capacity crunch — both supportive of the export story. Offsetting this, Vietnam's tech exporters are watching a potential global IT-spending slowdown that bears directly on the growth target.`,
+   news:[{d:"1 day ago",s:"VnExpress",t:"pos",h:"FPT signs multi-year AI services agreement with Japanese partner"},
+         {d:"4 days ago",s:"Tuoi Tre",t:"pos",h:"FPT opens new delivery centre to ease engineer-capacity crunch"},
+         {d:"1 week ago",s:"Bloomberg",t:"neg",h:"Vietnam tech exporters watch global IT-spending slowdown"},
+         {d:"2 weeks ago",s:"FPT IR",t:"neu",h:"FPT reaffirms >20% growth target at annual investor day"}],
+   catalysts:[["Annual investor day","2026-07-15 · medium"],["Quarterly results","2026-07-30 · medium"]],
+   risks:["Client concentration among large outsourcing clients.","Engineer wage inflation and talent retention pressure.",
+          "FX exposure on overseas contracts (JPY, USD, EUR).","The >20% growth target may not hold if global IT spending slows."],
+   takeaways:["Strong, consistent profitability (27.4% ROE, 15% net margin).","Export-led growth tied to global IT and AI demand.",
+              "Healthy cash generation funds capacity buildout.","Valuation parked under review until growth input is verified."],
+   checks:[{level:"ok",code:"CFO vs NI",message:"Operating cash flow is 95% of net income — earnings quality is sound."},
+           {level:"alert",code:"Growth",message:"Forward growth 24% is well above the 12% historical CAGR — DCF target withheld pending verification."},
+           {level:"ok",code:"Leverage",message:"Debt/equity of 0.53x is conservative."}],
+   citations:["FPT FY2025 Financial Report — Strategy, Growth Drivers, p.19","FPT FY2025 Financial Report — Risk Factors, p.41","HOSE filings / internal DCF model","Company disclosures & press"]}
+};
+
+Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=11;Chart.defaults.color="#6B6B6B";
+const charts={};
+function mk(id,type,data,opts){if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  charts[id]=new Chart(el,{type:type,data:data,options:Object.assign({responsive:true,maintainAspectRatio:false},opts||{})});}
+const pct=x=>(x*100).toFixed(Math.abs(x)>=1?0:1)+"%";
+const sgn=x=>(x>=0?"+":"−")+pct(Math.abs(x));
+const num=x=>x.toLocaleString(undefined,{maximumFractionDigits:2});
+
+const STATE={ticker:"AAPL",period:"6M"};
+const PCFG={
+  "1D":{n:78,stepMin:5,fmt:"time",vol:0.0016,iv:"5-minute"},
+  "1W":{n:40,stepMin:60,fmt:"daytime",vol:0.0045,iv:"hourly"},
+  "1M":{n:22,stepMin:1440,fmt:"date",vol:0.013,iv:"daily"},
+  "3M":{n:63,stepMin:1440,fmt:"month",vol:0.013,iv:"daily"},
+  "6M":{n:126,stepMin:1440,fmt:"month",vol:0.013,iv:"daily"},
+  "1Y":{n:52,stepMin:10080,fmt:"month",vol:0.03,iv:"weekly"}
+};
+const C_UP="#2EA37D",C_DN="#E2574B";
+function fmtTs(dt,fmt){
+  if(fmt==="time")return dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  if(fmt==="daytime")return dt.toLocaleDateString('en-US',{weekday:'short'});
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function genOHLC(tk,end,cfg){
+  let h=0;for(const c of (tk+cfg.iv))h=(h*131+c.charCodeAt(0))>>>0;
+  const rnd=()=>{h^=h<<13;h>>>=0;h^=h>>17;h^=h<<5;h>>>=0;return (h>>>0)/4294967296;};
+  const n=cfg.n,out=[];let prev=end*(0.84+rnd()*0.06);
+  for(let i=0;i<n;i++){const o=prev,c=o*(1+(rnd()-0.47)*cfg.vol*2),
+    hi=Math.max(o,c)*(1+rnd()*cfg.vol),lo=Math.min(o,c)*(1-rnd()*cfg.vol);
+    out.push({o,h:hi,l:lo,c});prev=c;}
+  const k=end/out[n-1].c;out.forEach(d=>{d.o*=k;d.h*=k;d.l*=k;d.c*=k;});
+  const now=new Date();
+  out.forEach((d,i)=>{const dt=new Date(now.getTime()-(n-1-i)*cfg.stepMin*60000);d.t=fmtTs(dt,cfg.fmt);});
+  return out;}
+const OHLC={};let pxHover=null;
+function priceChart(){const d=DATA[STATE.ticker],cfg=PCFG[STATE.period],key=STATE.ticker+STATE.period;
+  if(!OHLC[key])OHLC[key]=genOHLC(STATE.ticker,d.price,cfg);pxHover=null;drawCandles();}
+function drawCandles(){
+  const cv=document.getElementById('priceChart');if(!cv)return;
+  const d=DATA[STATE.ticker],cfg=PCFG[STATE.period],data=OHLC[STATE.ticker+STATE.period];if(!data)return;
+  const dpr=window.devicePixelRatio||1,cssW=cv.clientWidth||cv.parentNode.clientWidth,cssH=cv.clientHeight||230;
+  cv.width=cssW*dpr;cv.height=cssH*dpr;const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
+  const padT=8,padB=22,padR=54,padL=8,pw=cssW-padL-padR,ph=cssH-padT-padB;
+  let lo=Infinity,hi=-Infinity;data.forEach(c=>{if(c.l<lo)lo=c.l;if(c.h>hi)hi=c.h;});
+  const rng=(hi-lo)||1;lo-=rng*0.06;hi+=rng*0.06;const Y=v=>padT+ph-((v-lo)/(hi-lo))*ph;
+  const n=data.length,step=pw/n,bw=Math.max(1.5,Math.min(11,step*0.62));
+  ctx.font="10px Inter,sans-serif";ctx.textBaseline="middle";
+  for(let i=0;i<=5;i++){const val=lo+(hi-lo)*i/5,y=Y(val);
+    ctx.strokeStyle="rgba(0,0,0,.05)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+pw,y);ctx.stroke();
+    ctx.fillStyle="#9A9A9A";ctx.textAlign="left";
+    ctx.fillText(d.cur+(val>=1000?(val/1000).toFixed(0)+'k':val.toFixed(val<10?2:0)),padL+pw+6,y);}
+  data.forEach((c,i)=>{const x=padL+step*(i+0.5),up=c.c>=c.o,col=up?C_UP:C_DN;
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,Y(c.h));ctx.lineTo(x,Y(c.l));ctx.stroke();
+    const yo=Y(c.o),yc=Y(c.c),top=Math.min(yo,yc),hgt=Math.max(1,Math.abs(yc-yo));ctx.fillRect(x-bw/2,top,bw,hgt);
+    if(pxHover===i){ctx.strokeStyle="rgba(0,0,0,.28)";ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+ph);ctx.stroke();ctx.setLineDash([]);}});
+  ctx.fillStyle="#9A9A9A";ctx.textAlign="center";ctx.textBaseline="top";
+  const every=Math.max(1,Math.floor(n/Math.min(7,n)));
+  data.forEach((c,i)=>{if(i%every===0){const x=padL+step*(i+0.5);ctx.fillText(c.t,x,padT+ph+6);}});
+  updateReadout(pxHover==null?data[n-1]:data[pxHover],data);}
+function updateReadout(c,data){const el=document.getElementById('pxOHLC');if(!el)return;const d=DATA[STATE.ticker];
+  const chg=(c.c-data[0].o)/data[0].o;
+  el.innerHTML=`<span>O <b>${d.cur}${num(c.o)}</b></span><span>H <b>${d.cur}${num(c.h)}</b></span><span>L <b>${d.cur}${num(c.l)}</b></span><span>C <b>${d.cur}${num(c.c)}</b></span>
+    <span class="chip ${chg>=0?'up':'dn'}">${sgn(chg)} · ${STATE.period}</span><span class="ill">${c.t} · ${PCFG[STATE.period].iv} candles</span>`;}
+function priceHover(e){const cv=document.getElementById('priceChart');if(!cv)return;const data=OHLC[STATE.ticker+STATE.period];if(!data)return;
+  const r=cv.getBoundingClientRect(),x=e.clientX-r.left,cssW=cv.clientWidth,padL=8,padR=54,pw=cssW-padL-padR,n=data.length,step=pw/n;
+  let idx=Math.floor((x-padL)/step);idx=Math.max(0,Math.min(n-1,idx));if(idx!==pxHover){pxHover=idx;drawCandles();}}
+function priceLeave(){pxHover=null;drawCandles();}
+function setPeriod(p){STATE.period=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));priceChart();}
+let _rsz;window.addEventListener('resize',()=>{clearTimeout(_rsz);_rsz=setTimeout(()=>{if(!document.body.classList.contains('reportmode'))drawCandles();},150);});
+
+function revChart(id,d){mk(id,'bar',{labels:d.chartRev.years,datasets:[
+    {type:'bar',label:d.chartRev.lblBar,data:d.chartRev.bars,backgroundColor:'#1B4D38',borderRadius:3,yAxisID:'y',order:2},
+    {type:'line',label:d.chartRev.lblLine,data:d.chartRev.line,borderColor:'#C4B47A',backgroundColor:'#C4B47A',borderWidth:2,tension:.2,pointRadius:3,yAxisID:'y1',order:1}]},
+  {plugins:{legend:{position:'top',labels:{boxWidth:10,usePointStyle:true,font:{size:10}}}},
+   scales:{x:{grid:{display:false}},y:{position:'left',grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},y1:{position:'right',grid:{display:false}}}});}
+function epsChart(id,d){mk(id,'line',{labels:d.chartEps.years,datasets:[
+    {label:d.chartEps.la,data:d.chartEps.a,borderColor:'#1A3D2A',backgroundColor:'#1A3D2A',borderWidth:2,tension:.2,pointRadius:3,yAxisID:'y'},
+    {label:d.chartEps.lb,data:d.chartEps.b,borderColor:'#C4B47A',backgroundColor:'#C4B47A',borderWidth:2,tension:.2,pointRadius:3,borderDash:[4,3],yAxisID:'y1'}]},
+  {plugins:{legend:{position:'top',labels:{boxWidth:10,usePointStyle:true,font:{size:10}}}},
+   scales:{x:{grid:{display:false}},y:{position:'left',grid:{color:"rgba(0,0,0,.05)"}},y1:{position:'right',grid:{display:false}}}});}
+function peerChart(id,d){mk(id,'bar',{labels:d.peers.cats,datasets:[{label:d.peers.title,data:d.peers.vals,
+    backgroundColor:d.peers.cats.map((c,i)=>i===0?'#1B4D38':'#A8BBAF'),borderRadius:3}]},
+  {plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'x'}}},
+   scales:{x:{grid:{display:false}},y:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v+'x'}}}});}
+
+function dtable(o){return `<table class="dt"><tr><th></th>${o.years.map(y=>`<th>${y}</th>`).join("")}</tr>`+
+  o.rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(v=>`<td>${v}</td>`).join("")}</tr>`).join("")+`</table>`;}
+function newsH(a){const m={pos:["pos","positive"],neg:["neg","negative"],neu:["neu","neutral"]};
+  return a.map(n=>{const[cl,lb]=m[n.t];return `<div class="news"><div class="stripe ${cl}"></div><div><div class="hd">${n.h}</div><div class="mt">${n.s} · ${n.d}<span class="tag ${cl}">${lb}</span></div></div></div>`;}).join("");}
+function listH(a,mk){return `<ul class="list">`+a.map(x=>`<li><span class="mk">${mk}</span><span>${x}</span></li>`).join("")+`</ul>`;}
+function valbar(d){if(d.fairLow==null)return `<div style="font-size:12.5px;color:var(--amber);padding:8px 0;line-height:1.6"><b>Target withheld.</b> The growth assumption feeding the DCF is flagged by the verification gate — ${d.fairMethod}.</div>`;
+  const dmin=Math.min(d.fairLow,d.price),dmax=Math.max(d.fairHigh,d.price),sp=(dmax-dmin)||1,P=x=>((x-dmin)/sp*100);
+  return `<div class="vtrack"><div class="vband" style="left:${P(d.fairLow)}%;width:${P(d.fairHigh)-P(d.fairLow)}%"></div>
+    <div class="vt base" style="left:${P(d.target)}%"><span class="cap">fair ${d.cur}${num(d.target)}</span></div>
+    <div class="vt price" style="left:${P(d.price)}%"><span class="cap">price ${d.cur}${num(d.price)}</span></div></div>
+    <div class="vends"><span>low ${d.cur}${num(d.fairLow)}</span><span>high ${d.cur}${num(d.fairHigh)}</span></div>
+    <div class="ill" style="margin-top:8px">Method: ${d.fairMethod}.</div>`;}
+const alStrip={ok:"#2E7D32",warning:"#B45309",alert:"#C62828"};
+const alIcon={ok:"ti-circle-check",warning:"ti-alert-triangle",alert:"ti-alert-octagon"};
+function checksH(a){return a.map(c=>`<div class="alert"><div class="alert-strip" style="background:${alStrip[c.level]}"></div>
+  <div><div class="alert-title"><i class="ti ${alIcon[c.level]}" style="color:${alStrip[c.level]}"></i>${c.code}</div><div class="alert-body">${c.message}</div></div></div>`).join("");}
+
+function renderWL(){document.getElementById('wl').innerHTML=Object.values(DATA).map(d=>{const up=d.dayChange>=0;
+  return `<div class="nav-item ${d.ticker===STATE.ticker?'active':''}" onclick="show('${d.ticker}')">
+    <div><div class="t">${d.ticker}</div><div class="n">${d.exchange}</div></div>
+    <div class="px"><div class="p">${num(d.price)}</div><div class="c ${up?'up':'dn'}">${sgn(d.dayChange)}</div></div></div>`;}).join("");}
+function renderTop(d){const up=d.dayChange>=0;document.getElementById('topbar').innerHTML=`
+  <div class="tb-l"><h1>${d.name}</h1><span class="tk">${d.ticker} · ${d.sector}</span></div>
+  <div class="tb-r"><span class="tb-price">${d.cur}${num(d.price)}</span>
+    <span class="chip ${up?'up':'dn'}">${sgn(d.dayChange)}</span>
+    <span class="rbadge rb-${d.ratingClass}">${d.rating}</span>
+    <button class="export-btn solid" onclick="openReport()"><i class="ti ti-file-text"></i>Generate report</button></div>`;}
+
+function kpi(label,value,sub,icon,vcls){return `<div class="card"><div class="card-top"><span class="card-label">${label}</span>
+  <div class="stat-icon"><i class="ti ${icon}"></i></div></div><div class="card-value ${vcls||''}">${value}</div><div class="card-sub">${sub||''}</div></div>`;}
+
+function renderDash(){const d=DATA[STATE.ticker],up=d.dayChange>=0;
+  const fv=d.target==null?'Under review':d.cur+num(d.target);
+  document.getElementById('dash').innerHTML=`
+  <div class="section-hd"><span>Overview</span><span class="prov"><i class="ti ti-flask"></i> mock data</span></div>
+  <div class="cards g4">
+    ${kpi('Last price',d.cur+num(d.price),sgn(d.dayChange)+' today',up?'ti-trending-up':'ti-trending-down')}
+    ${kpi('Fair value',fv,d.target==null?'flagged':'vs price '+(d.target>=d.price?'+':'−')+pct(Math.abs((d.target-d.price)/d.price)),'ti-target')}
+    ${kpi('Rating',d.rating,'analyst signal','ti-gauge')}
+    ${kpi('52W range',d.metrics[5][1],'price band','ti-arrows-vertical')}
+  </div>
+
+  <div class="chart-box"><div class="chart-hdr">
+    <div class="chart-title"><i class="ti ti-chart-candle" style="color:var(--primary)"></i> Price <span class="sub">${d.ticker} · ${d.exchange}</span></div>
+    <div class="period-btns">${Object.keys(PCFG).map(p=>`<button class="period-btn ${p===STATE.period?'active':''}" data-p="${p}" onclick="setPeriod('${p}')">${p}</button>`).join("")}</div>
+  </div>
+  <div id="pxOHLC" class="ohlc-readout"></div>
+  <div class="chart-wrap"><canvas id="priceChart" style="cursor:crosshair" onmousemove="priceHover(event)" onmouseleave="priceLeave()"></canvas></div>
+  <div class="ill" style="margin-top:8px">Illustrative candlesticks — switch 1D / 1W / 1M / 3M / 6M / 1Y to change interval (minutes → hours → days → weeks). Hover for OHLC. Placeholder for a live market feed.</div></div>
+
+  <div class="card"><div class="thesis">${d.thesis}</div></div>
+  <div class="cards g2">
+    <div class="card"><div class="subh">Company overview</div>${d.overview.map(p=>`<p class="prose">${p}</p>`).join("")}</div>
+    <div class="card"><div class="subh">Key metrics</div><div class="tiles">${d.metrics.map(m=>`<div class="mini"><div class="v">${m[1]}</div><div class="k">${m[0]}</div></div>`).join("")}</div></div>
+  </div>
+
+  <div class="section-hd"><span>Financial analysis</span><span class="prov det"><i class="ti ti-database"></i> deterministic</span></div>
+  <div class="cards g2">
+    <div class="chart-box"><div class="chart-hdr"><div class="chart-title"><i class="ti ti-chart-bar" style="color:var(--primary)"></i> Revenue &amp; EBITDA</div></div><div class="chart-wrap-sm"><canvas id="revChart"></canvas></div></div>
+    <div class="chart-box"><div class="chart-hdr"><div class="chart-title"><i class="ti ti-chart-dots" style="color:var(--primary)"></i> EPS &amp; P/E trend</div></div><div class="chart-wrap-sm"><canvas id="epsChart"></canvas></div></div>
+  </div>
+  <div class="chart-box"><div class="chart-hdr"><div class="chart-title"><i class="ti ti-table" style="color:var(--primary)"></i> Income statement summary</div></div>${dtable(d.income)}</div>
+  <div class="chart-box"><div class="chart-hdr"><div class="chart-title"><i class="ti ti-table" style="color:var(--primary)"></i> Credit &amp; cash-flow metrics</div></div>${dtable(d.credit)}</div>
+
+  <div class="section-hd"><span>Valuation</span><span class="prov det"><i class="ti ti-database"></i> deterministic</span></div>
+  <div class="card"><div class="cards g2"><div>${valbar(d)}</div><div><p class="prose">${d.valuation}</p></div></div></div>
+  <div class="cards g2">
+    <div class="chart-box"><div class="chart-hdr"><div class="chart-title"><i class="ti ti-chart-bar" style="color:var(--primary)"></i> Peer comparison <span class="sub">${d.peers.title}</span></div></div><div class="chart-wrap-sm"><canvas id="peerChart"></canvas></div><div class="ill" style="margin-top:8px">${d.peers.note}</div></div>
+    <div class="card"><div class="subh">Sensitivity &amp; assumptions</div>
+      <table class="dt">${d.sens.assumptions.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td></tr>`).join("")}</table>
+      <div class="subh" style="margin-top:12px">Confidence / range</div><table class="dt">${d.sens.ci.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td></tr>`).join("")}</table></div>
+  </div>
+
+  <div class="section-hd"><span>Market &amp; news</span><span class="prov"><i class="ti ti-flask"></i> illustrative</span></div>
+  <div class="cards g2">
+    <div class="card"><div class="subh">Recent news &amp; events</div><p class="prose" style="font-size:12.5px">${d.newsSummary}</p>${newsH(d.news)}</div>
+    <div class="card"><div class="subh">Key catalysts</div>${d.catalysts.map(c=>`<div class="cat"><span>${c[0]}</span><span class="meta">${c[1]}</span></div>`).join("")}
+      <div class="subh" style="margin-top:16px">Risk factors</div>${listH(d.risks,"■")}</div>
+  </div>
+
+  <div class="section-hd"><span>Verification gate</span><span class="prov det"><i class="ti ti-shield-check"></i> our flavor</span></div>
+  <div class="card">${checksH(d.checks)}
+    <div class="foot-src">Every figure traces to the engine; every claim is cited. Sources: ${d.citations.map((c,i)=>`[${i+1}] ${c}`).join(" · ")}.</div></div>
+  <div style="height:8px"></div>`;
+  priceChart();revChart('revChart',d);epsChart('epsChart',d);peerChart('peerChart',d);}
+
+function renderReport(){const d=DATA[STATE.ticker];const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long'});
+  const targetTxt=d.target==null?"Under review":`${d.cur}${num(d.fairLow)}–${d.cur}${num(d.fairHigh)}`;
+  document.getElementById('report').innerHTML=`
+  <div class="rtoolbar"><button class="export-btn" onclick="closeReport()"><i class="ti ti-arrow-left"></i> Back to dashboard</button>
+    <button class="export-btn solid" onclick="window.print()"><i class="ti ti-printer"></i> Print / Save as PDF</button></div>
+  <div class="doc">
+    <div class="cover"><div class="er">EQUITY RESEARCH</div><h1>${d.name.toUpperCase()}</h1>
+      <div class="tk">${d.ticker} · ${d.sector}</div><div class="rt">Rating: ${d.rating}</div>
+      <div class="ct">Current: ${d.cur}${num(d.price)} · Target: ${targetTxt}</div>
+      <div class="dt">${today} · Aurora Research</div></div>
+    <h2 class="s">Key metrics snapshot</h2><table class="dt">
+      <tr>${d.metrics.slice(0,3).map(m=>`<th>${m[0]}</th>`).join("")}</tr><tr>${d.metrics.slice(0,3).map(m=>`<td style="text-align:left;font-weight:700;color:var(--text)">${m[1]}</td>`).join("")}</tr>
+      <tr>${d.metrics.slice(3).map(m=>`<th>${m[0]}</th>`).join("")}</tr><tr>${d.metrics.slice(3).map(m=>`<td style="text-align:left;font-weight:700;color:var(--text)">${m[1]}</td>`).join("")}</tr></table>
+    <h2 class="s">Investment thesis</h2><div class="kvbox">${d.thesis}</div>
+    <h2 class="s">Company overview</h2>${d.overview.map(p=>`<p>${p}</p>`).join("")}
+    <h2 class="s">Financial analysis</h2>
+    <div class="cards g2"><div class="chart-wrap-sm"><canvas id="rRev"></canvas></div><div class="chart-wrap-sm"><canvas id="rEps"></canvas></div></div>
+    <h2 class="s">Valuation analysis</h2>${valbar(d)}<p style="margin-top:10px">${d.valuation}</p>
+    <h2 class="s">Peer comparison</h2><div class="chart-wrap-sm"><canvas id="rPeer"></canvas></div>
+    <p style="margin-top:8px;font-size:12px;color:var(--text3)">${d.peers.note}</p>
+    <h2 class="s">Recent news &amp; events</h2><p>${d.newsSummary}</p>
+    ${d.news.map(n=>`<p style="font-size:12px;margin:4px 0"><b>${n.d}</b> · ${n.s} — ${n.h}</p>`).join("")}
+    <h2 class="s">Sensitivity analysis</h2><h3 class="s">Key assumptions</h3>${d.sens.assumptions.map(a=>`<p style="margin:2px 0;font-size:12.5px">• ${a[0]}: <b>${a[1]}</b></p>`).join("")}
+    <h3 class="s">Confidence / range</h3>${d.sens.ci.map(a=>`<p style="margin:2px 0;font-size:12.5px">• ${a[0]}: <b>${a[1]}</b></p>`).join("")}
+    <h2 class="s">Key catalysts</h2>${d.catalysts.map(c=>`<p style="margin:3px 0;font-size:12.5px">▲ ${c[0]} — <span style="color:var(--text3)">${c[1]}</span></p>`).join("")}
+    <h2 class="s">Risk factors</h2>${d.risks.map(r=>`<p style="margin:5px 0;font-size:12.5px">■ ${r}</p>`).join("")}
+    <h2 class="s">Key takeaways</h2>${d.takeaways.map(r=>`<p style="margin:5px 0;font-size:12.5px">✓ ${r}</p>`).join("")}
+    <h2 class="s">Verification gate <span style="font-size:11px;color:var(--text3)">(our flavor)</span></h2>
+    ${d.checks.map(c=>`<p style="margin:5px 0;font-size:12.5px"><b style="text-transform:uppercase;color:${alStrip[c.level]}">${c.level}</b> — <b>${c.code}:</b> ${c.message}</p>`).join("")}
+    <h2 class="s">Financial data</h2><h3 class="s">Income statement summary</h3>${dtable(d.income)}
+    <h3 class="s" style="margin-top:14px">Credit &amp; cash-flow metrics</h3>${dtable(d.credit)}
+    <div class="disc">Sources: ${d.citations.map((c,i)=>`[${i+1}] ${c}`).join(" · ")}.<br/>
+    Every figure is produced by a deterministic engine; the AI composes the narrative but does not originate numbers. Qualitative claims are grounded in the cited sources and assumptions are screened by the verification gate — items that fail are flagged, not silently published. Illustrative mock data for demonstration only. Not investment advice.</div>
+  </div>`;
+  revChart('rRev',d);epsChart('rEps',d);peerChart('rPeer',d);}
+
+/* ── Live research: procedural company generation + pipeline animation ── */
+const SECTORS=["Technology","Healthcare","Financials","Energy","Consumer Goods","Industrials","Communication Services","Materials"];
+const EXCH=["NYSE","NASDAQ","LSE","TSX","ASX"];
+function rngFrom(seed){let h=0;for(const c of seed)h=(h*131+c.charCodeAt(0))>>>0;
+  return ()=>{h^=h<<13;h>>>=0;h^=h>>17;h^=h<<5;h>>>=0;return (h>>>0)/4294967296;};}
+function bn(x){return x>=1000?"$"+(x/1000).toFixed(1)+"B":"$"+Math.round(x)+"M";}
+function generateCompany(tk){
+  const r=rngFrom(tk+"v1");
+  const sector=SECTORS[Math.floor(r()*SECTORS.length)], exch=EXCH[Math.floor(r()*EXCH.length)];
+  const price=+(25+r()*340).toFixed(2), day=+(((r()-0.5)*0.045)).toFixed(4), shares=Math.round(150+r()*3500);
+  const years=["2021A","2022A","2023A","2024A","2025A"], yLbl=["2021","2022","2023","2024","2025"];
+  const rev=[];let v=Math.round(3000+r()*55000);for(let i=0;i<5;i++){rev.push(Math.round(v));v*=(1+(0.04+r()*0.20)*(0.6+r()*0.8));}
+  const nMar=0.07+r()*0.22, eMar=nMar+0.06+r()*0.12;
+  const ni=rev.map(x=>Math.round(x*nMar*(0.92+r()*0.16))), ebitda=rev.map(x=>Math.round(x*eMar));
+  const eps=ni.map(x=>+(x/shares).toFixed(2)), peNow=price/(eps[4]||1);
+  const pe=eps.map((e,i)=>+(peNow*(0.78+0.06*i)*(0.95+r()*0.1)).toFixed(1));
+  const equity=Math.round(rev[4]*(0.4+r()*0.5)), roe=ni[4]/equity, dte=+(0.3+r()*1.8).toFixed(2);
+  const histCAGR=Math.pow(rev[4]/rev[0],1/4)-1, fcf=ebitda[4]*(0.55+r()*0.2), fwdG=histCAGR*(0.7+r()*0.7);
+  const wacc=0.10,tg=0.025;let pv=0,f=fcf;for(let i=1;i<=5;i++){f*=(1+fwdG);pv+=f/Math.pow(1+wacc,i);}
+  const tv=(f*(1+tg)/(wacc-tg))/Math.pow(1+wacc,5), ev=pv+tv;
+  let base=+(((ev-equity*dte*0.2+rev[4]*0.05)/shares)).toFixed(2);if(base<price*0.3)base=+(price*(0.6+r()*0.6)).toFixed(2);
+  const low=+(base*0.86).toFixed(2),high=+(base*1.17).toFixed(2),upside=(base-price)/price;
+  const flagged=fwdG>histCAGR*1.5&&fwdG>0.13;
+  let rating,rcls,target=null,fairLow=null,fairHigh=null,fairMethod;
+  if(flagged){rating="Under review";rcls="amber";fairMethod="DCF withheld — growth assumption flagged";}
+  else{target=base;fairLow=low;fairHigh=high;fairMethod="5-year DCF · WACC 10% · terminal g 2.5%";
+    rating=upside>0.15?"Undervalued":upside<-0.15?"Overvalued":"Fairly valued";rcls=upside>0.15?"green":upside<-0.15?"red":"amber";}
+  const moneyB=a=>a.map(x=>"$"+(x/1000).toFixed(1)+"B");
+  return {name:tk+" · live research",ticker:tk,exchange:exch,sector,cur:"$",price,dayChange:day,rating,ratingClass:rcls,
+    target,fairLow,fairHigh,fairMethod,generated:true,
+    metrics:[["Market cap",bn(price*shares)],["P/E (fwd)",peNow.toFixed(1)+"x"],["P/B ratio",(price/(equity/shares)).toFixed(2)+"x"],
+      ["ROE",pct(roe)],["Div yield",pct(r()*0.03)],["52W range","$"+(price*0.82).toFixed(0)+"–$"+(price*1.16).toFixed(0)]],
+    thesis:`${tk} operates in ${sector.toLowerCase()}. On our five-year DCF, fair value is <span class="fig">$${base}</span> against the current $${price}, ${flagged?'but the model is parked under review — the forward growth assumption runs ahead of history':`implying <span class="fig">${sgn(upside)}</span> ${upside>=0?'upside':'downside'}`}. The business shows a <span class="fig">${pct(roe)}</span> return on equity and a ${pct(nMar)} net margin, with revenue compounding at a ${pct(histCAGR)} historical CAGR.`,
+    overview:[`${tk} is a ${sector.toLowerCase()} company listed on ${exch}. This profile was assembled on demand by the research pipeline from (illustrative) financial statements, filings and news — showing the system can cover names beyond the static watchlist, not just hand-curated tickers.`,
+      `Revenue reached <span class="fig">$${(rev[4]/1000).toFixed(1)}B</span> in 2025 with net income of $${(ni[4]/1000).toFixed(1)}B (${pct(nMar)} margin) and EPS of $${eps[4]}. The deterministic engine computed every figure shown here; the narrative is composed around those numbers and screened by the verification gate.`],
+    chartRev:{years:yLbl,bars:rev.map(x=>+(x/1000).toFixed(1)),line:ebitda.map(x=>+(x/1000).toFixed(1)),lblBar:"Revenue $B",lblLine:"EBITDA $B"},
+    chartEps:{years:yLbl,a:eps,b:pe,la:"EPS $",lb:"P/E x"},
+    income:{years,rows:[["Revenue",moneyB(rev)],["EBITDA",moneyB(ebitda)],["EBITDA margin",ebitda.map((e,i)=>pct(e/rev[i]))],
+      ["Net income",moneyB(ni)],["Net margin",ni.map((x,i)=>pct(x/rev[i]))],["EPS",eps.map(x=>x.toFixed(2))],
+      ["P/E ratio",pe.map(x=>x.toFixed(1))],["Revenue growth",rev.map((x,i)=>i===0?"—":pct((rev[i]-rev[i-1])/rev[i-1]))]]},
+    credit:{years,rows:[["Debt / equity",years.map((_,i)=>(dte*(1.12-0.04*i)).toFixed(2))],
+      ["ROE",ni.map((x,i)=>pct(x/(equity*(0.8+0.05*i))))],["Net margin",ni.map((x,i)=>pct(x/rev[i]))],
+      ["Current ratio",years.map(()=>(0.9+r()*1.1).toFixed(2))]]},
+    valuation:`At ${peNow.toFixed(1)}× forward earnings, ${tk} ${upside>=0?'trades below':'trades above'} our intrinsic estimate. ${flagged?'A DCF is computable, but the verification gate withholds a target until the growth assumption is justified.':`Our base-case DCF of <span class="fig">$${base}</span> (range $${low}–$${high}) implies ${sgn(upside)} versus the current price.`}<sup class="c">[3]</sup>`,
+    peers:{title:"Forward P/E (peers)",cats:[tk,"Peer A","Peer B"],vals:[+peNow.toFixed(1),+(peNow*(0.78+r()*0.3)).toFixed(1),+(peNow*(1.05+r()*0.4)).toFixed(1)],
+      note:`Peer multiples are illustrative; a live run would pull a sector comp set for ${sector.toLowerCase()}.`},
+    sens:{assumptions:[["Forward FCF growth",pct(fwdG)],["Historical CAGR",pct(histCAGR)],["WACC","10.0%"],["Terminal growth","2.5%"]],
+      ci:flagged?[["Status","DCF withheld pending review"],["Trigger","Growth > 1.5× historical CAGR"]]:[["DCF range","$"+low+" – $"+high],["Implied upside",sgn(upside)]]},
+    newsSummary:`Recent flow on ${tk} is mixed. These headlines are generated by the pipeline as a placeholder for a live news and sentiment feed.<sup class="c">[4]</sup>`,
+    news:[{d:"1 day ago",s:"Newswire",t:"pos",h:`${tk} posts quarterly results modestly ahead of consensus`},
+      {d:"4 days ago",s:"MarketWatch",t:"neu",h:`Analysts weigh ${tk} valuation after a strong run`},
+      {d:"1 week ago",s:"Bloomberg",t:r()>0.5?"neg":"pos",h:`${sector} outlook shifts on macro data`}],
+    catalysts:[["Next quarterly earnings","~2026-08 · medium"],["Sector / macro catalyst","ongoing · low"]],
+    risks:[`Revenue growth could decelerate from the ${pct(histCAGR)} historical pace.`,
+      `Re-rating risk if the ${peNow.toFixed(1)}× multiple compresses toward peers.`,
+      `Margin pressure from competition or input-cost inflation.`,
+      `Execution and macro sensitivity within ${sector.toLowerCase()}.`],
+    takeaways:[`${pct(roe)} ROE indicates efficient use of capital.`,`Margins are ${nMar>0.15?'healthy':'modest'} at ${pct(nMar)} net.`,
+      `Cash generation supports the valuation case.`,flagged?`Growth assumption flagged — treat the DCF with caution.`:`Valuation rests on assumptions consistent with history.`],
+    checks:[{level:"ok",code:"CFO vs NI",message:"Operating cash flow tracks net income — no earnings-quality flag."},
+      flagged?{level:"alert",code:"Growth",message:`Forward growth ${pct(fwdG)} exceeds the ${pct(histCAGR)} historical CAGR — DCF target withheld pending verification.`}
+             :{level:"ok",code:"Growth",message:`Forward growth ${pct(fwdG)} is consistent with the ${pct(histCAGR)} historical CAGR.`},
+      dte>2?{level:"warning",code:"Leverage",message:`Debt/equity of ${dte}× is elevated — note in the risk section.`}
+           :{level:"ok",code:"Leverage",message:`Debt/equity of ${dte}× is manageable.`}],
+    citations:[`${tk} latest annual filing — MD&A (mock)`,`${tk} latest annual filing — Risk Factors (mock)`,
+      "FMP / market data — statements & multiples (mock)","Aggregated news & sentiment (mock)"]};}
+
+const STEPS=[["Resolving ticker","Looking up company profile & listing"],
+  ["Fetching financials","Income statement, balance sheet, cash flow"],
+  ["Computing ratios & DCF","Deterministic engine — no AI numbers"],
+  ["Retrieving filings","RAG over MD&A and risk factors"],
+  ["Fetching news & sentiment","Headlines and social signals"],
+  ["Running verification gate","Reconcile figures, flag assumptions"],
+  ["Composing sections","Grounded narrative with citations"],
+  ["Rendering workspace","Candlesticks, charts, tables"]];
+async function runResearch(){
+  const inp=document.getElementById('tkInput');let tk=((inp&&inp.value)||'').toUpperCase().replace(/[^A-Z0-9.]/g,'').slice(0,6);
+  if(!tk)return;
+  document.body.classList.remove('reportmode');
+  document.getElementById('topbar').innerHTML=`<div class="tb-l"><h1>Researching ${tk}…</h1></div>`;
+  document.getElementById('dash').innerHTML=`<div class="pipe-wrap"><div class="pipe-card">
+    <div class="pipe-h"><i class="ti ti-radar-2"></i> Researching <span style="color:var(--primary)">${tk}</span></div>
+    <div class="pipe-sub">Running the live research pipeline — illustrative mock retrieval</div>
+    ${STEPS.map((s,i)=>`<div class="pstep" id="ps${i}"><span class="pdot"><i class="ti ti-circle"></i></span><div><div class="pl">${s[0]}</div><div class="pd">${s[1]}</div></div><span class="pstat" id="pt${i}"></span></div>`).join("")}
+  </div></div>`;
+  for(let i=0;i<STEPS.length;i++){
+    const row=document.getElementById('ps'+i);row.classList.add('run');
+    document.getElementById('pt'+i).innerHTML='<i class="ti ti-loader-2 spin"></i>';
+    await new Promise(res=>setTimeout(res,340+Math.random()*430));
+    row.classList.remove('run');row.classList.add('done');
+    row.querySelector('.pdot').innerHTML='<i class="ti ti-circle-check"></i>';
+    document.getElementById('pt'+i).innerHTML='<i class="ti ti-check"></i>';
+  }
+  await new Promise(res=>setTimeout(res,260));
+  DATA[tk]=generateCompany(tk);if(inp)inp.value='';show(tk);
+}
+
+function show(t){STATE.ticker=t;renderWL();renderTop(DATA[t]);renderDash();
+  if(document.body.classList.contains('reportmode'))renderReport();
+  document.getElementById('dash').scrollTop=0;}
+function openReport(){renderReport();document.body.classList.add('reportmode');}
+function closeReport(){document.body.classList.remove('reportmode');}
+show("AAPL");
+</script>
+</body>
+</html>

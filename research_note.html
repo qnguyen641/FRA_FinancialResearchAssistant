@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Equity Research Note — Financial Research Assistant</title>
+<style>
+  :root{
+    --ink:#1a1a18; --body:#33332e; --muted:#6b6a62; --faint:#9a988d;
+    --rule:#dcd9cf; --rule2:#ebe9e1; --paper:#ffffff; --bg:#edeae1;
+    --navy:#173b63; --green:#1f7a4d; --amber:#9a6a16; --red:#a8392f;
+    --band:#f3f1ea;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--body);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14.5px;line-height:1.62;}
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  .toolbar{max-width:880px;margin:0 auto;padding:18px 0 0;display:flex;justify-content:space-between;
+    align-items:center;gap:12px;flex-wrap:wrap;}
+  .tabs{display:flex;gap:6px;}
+  .tab{padding:7px 14px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);
+    color:var(--muted);cursor:pointer;font-weight:500;font-size:13px;}
+  .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .printbtn{padding:7px 14px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);
+    color:var(--navy);cursor:pointer;font-weight:600;font-size:13px;}
+  .note{max-width:880px;margin:16px auto 60px;background:var(--paper);
+    box-shadow:0 1px 3px rgba(0,0,0,.08),0 8px 30px rgba(0,0,0,.06);
+    padding:46px 56px 40px;border-radius:3px;}
+  /* masthead */
+  .mast{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--ink);padding-bottom:10px;}
+  .mast .firm{font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
+  .mast .kind{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .mast .meta{font-size:12px;color:var(--muted);text-align:right;}
+  /* title */
+  .titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:24px 0 4px;}
+  .titlerow h1{margin:0;font-size:30px;font-weight:600;color:var(--ink);line-height:1.15;}
+  .titlerow .sub{color:var(--muted);font-size:13.5px;margin-top:6px;letter-spacing:.02em;}
+  .rating{flex:none;text-align:center;border:1px solid var(--rule);border-radius:8px;padding:10px 16px;min-width:150px;}
+  .rating .r{font-size:16px;font-weight:700;font-family:Georgia,serif;}
+  .rating .rl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:3px;}
+  .rating.green .r{color:var(--green);} .rating.amber .r{color:var(--amber);} .rating.red .r{color:var(--red);}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-radius:8px;
+    overflow:hidden;margin:22px 0 30px;background:var(--band);}
+  .snap div{padding:14px 16px;border-right:1px solid var(--rule);}
+  .snap div:last-child{border-right:none;}
+  .snap .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+  .snap .v{font-size:21px;font-weight:600;color:var(--ink);margin-top:3px;font-family:Georgia,serif;}
+  .snap .v.green{color:var(--green);} .snap .v.red{color:var(--red);} .snap .v.amber{color:var(--amber);}
+  /* sections */
+  section{margin:28px 0;}
+  h2.sec{font-family:Georgia,serif;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--navy);margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
+  p.lead{font-size:15.5px;line-height:1.72;color:var(--ink);margin:0;}
+  p.lead .fig{font-weight:600;}
+  sup.c{color:var(--navy);font-weight:700;font-size:10px;vertical-align:super;padding-left:1px;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+  @media(max-width:760px){.cols{grid-template-columns:1fr;}.note{padding:30px 22px;}.snap{grid-template-columns:1fr 1fr;}}
+  .colh{font-weight:700;color:var(--ink);font-size:14px;margin-bottom:5px;}
+  /* valuation bar */
+  .vbar{margin:8px 0 4px;}
+  .vtrack{position:relative;height:6px;background:var(--rule2);border-radius:4px;margin:30px 0 8px;}
+  .vband{position:absolute;height:6px;background:var(--navy);opacity:.85;border-radius:4px;}
+  .vt{position:absolute;top:-6px;width:2px;height:18px;background:var(--ink);}
+  .vt.base{background:var(--navy);width:2.5px;}
+  .vt.price{background:var(--amber);}
+  .vt .cap{position:absolute;top:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10.5px;color:var(--muted);}
+  .vt.price .cap{color:var(--amber);font-weight:600;}
+  .vends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);}
+  .offnote{font-size:12px;color:var(--amber);margin-top:8px;}
+  /* tables */
+  table.fin{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.fin td{padding:7px 2px;border-bottom:1px solid var(--rule2);}
+  table.fin td.k{color:var(--muted);} table.fin td.v{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+  table.heat{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:4px;}
+  table.heat th,table.heat td{border:1px solid var(--rule);padding:7px 6px;text-align:center;font-variant-numeric:tabular-nums;}
+  table.heat th{background:var(--band);color:var(--muted);font-weight:600;font-size:11.5px;}
+  table.heat caption{caption-side:bottom;text-align:left;color:var(--faint);font-size:11px;margin-top:6px;}
+  /* revenue */
+  .bars{display:flex;align-items:flex-end;gap:12px;height:96px;margin-top:6px;}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bar .col{width:100%;max-width:40px;background:var(--navy);opacity:.82;border-radius:2px 2px 0 0;}
+  .bar .yr{color:var(--faint);font-size:10.5px;margin-top:5px;} .bar .amt{color:var(--muted);font-size:10.5px;margin-bottom:4px;}
+  /* checks */
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--rule2);}
+  .chk:last-child{border-bottom:none;}
+  .cflag{flex:none;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-top:1px;}
+  .cflag.ok{background:rgba(31,122,77,.12);color:var(--green);}
+  .cflag.warning{background:rgba(154,106,22,.14);color:var(--amber);}
+  .cflag.alert{background:rgba(168,57,47,.13);color:var(--red);}
+  /* sources */
+  .src{padding:10px 0;border-bottom:1px solid var(--rule2);font-size:12.5px;}
+  .src .h{color:var(--ink);} .src .h b{font-weight:700;}
+  .src .q{color:var(--muted);border-left:2px solid var(--rule);padding-left:10px;margin-top:5px;font-style:italic;}
+  .disc{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);color:var(--faint);font-size:11px;line-height:1.6;}
+  @media print{
+    body{background:#fff;} .toolbar{display:none;}
+    .note{box-shadow:none;margin:0;max-width:none;padding:0 8px;}
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="tabs" id="tabs"></div>
+    <button class="printbtn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <article class="note" id="note"></article>
+
+<script>
+const DATA = {
+ "D05.SI":{name:"DBS Group Holdings",ticker:"D05.SI",exchange:"SGX",currency:"SGD",sector:"Banking",
+   asof:"FY2025 · priced 12 Jun 2026",
+   rating:"Undervalued",ratingClass:"green",ratingLabel:"DCF vs price",
+   price:38.5,
+   summary:`DBS screens as a high-quality franchise trading well below our intrinsic estimate. Our base-case DCF of <span class="fig">S$71.70</span> per share sits roughly <span class="fig">86% above</span> the current S$38.50, within a sensitivity range of S$62.21–85.88. The quality is in the fundamentals: a <span class="fig">16.5% return on equity</span>, a 53.8% net margin, and operating cash flow at 105% of reported earnings, against modest leverage of 0.60x debt-to-equity. Critically, our 6% forward growth assumption sits <span class="fig">below</span> the 8% historical revenue CAGR — so the valuation does not lean on heroic assumptions. We would treat the gap to fair value as a genuine signal rather than a modelling artefact.`,
+   ratios:{net_margin:.5385,roe:.1647,roa:.0137,debt_to_equity:.6029,eps:3.9437,pe:9.7625},
+   revHist:[[2022,16500],[2023,18200],[2024,19600],[2025,20800]],
+   dcf:{base:71.7,low:62.21,high:85.88,price:38.5,upside:.8622,ccy:"SGD",
+     wacc:[.09,.10,.11],tg:[.02,.025,.03],
+     grid:[[77.22,81.22,85.88],[68.77,71.7,75.04],[62.21,64.42,66.91]]},
+   drivers:{text:"Loan growth, wealth-management fee income, elevated net interest margins and a growing base of affluent customers across Asia.",cite:1},
+   risks:{text:"Sensitivity of net interest income to rate moves, credit costs and loan losses, and macroeconomic conditions across Singapore, Hong Kong and China.",cite:2},
+   checks:[{level:"ok",code:"CFO_VS_NI",message:"Operating cash flow is 105% of net income — earnings quality is sound."},
+           {level:"ok",code:"GROWTH_ASSUMPTION",message:"Forward growth of 6% is consistent with the 8% historical revenue CAGR."}],
+   citations:[{n:1,doc:"DBS FY2025 Annual Report (mock)",section:"Management Discussion — Growth Drivers",page:34,as_of:"2025-12-31",
+       quote:"Management expects loan growth and wealth-management fee income to drive earnings, supported by elevated net interest margins and a growing base of affluent customers across Asia."},
+     {n:2,doc:"DBS FY2025 Annual Report (mock)",section:"Risk Factors",page:58,as_of:"2025-12-31",
+       quote:"Principal risks include the sensitivity of net interest income to interest-rate moves, credit costs and rising loan losses across the loan book, and macroeconomic conditions in Singapore, Hong Kong and China."}]},
+
+ "AAPL":{name:"Apple Inc.",ticker:"AAPL",exchange:"NASDAQ",currency:"USD",sector:"Consumer Electronics",
+   asof:"FY2025 · priced 12 Jun 2026",
+   rating:"Premium to fair value",ratingClass:"amber",ratingLabel:"DCF vs price",
+   price:212.4,
+   summary:`At $212.40 the shares trade materially above our mechanical valuation. Our base-case DCF of <span class="fig">$103.40</span> (range $86.93–128.01) implies the market is capitalising considerably more growth than a five-year model assumes — a recurring feature of cash-generative franchises. Reported <span class="fig">return on equity of 144%</span> is flattered by sustained buybacks, and Apple's services flywheel is valued beyond what discounted near-term cash flows capture. We flag the gap rather than resolve it: the figures are internally sound, but the <span class="fig">premium is a judgement call</span> the model deliberately does not make on the analyst's behalf.`,
+   ratios:{net_margin:.2444,roe:1.4412,roa:.2722,debt_to_equity:1.4853,eps:6.5772,pe:32.2935},
+   revHist:[[2022,383000],[2023,383000],[2024,391000],[2025,401000]],
+   dcf:{base:103.4,low:86.93,high:128.01,price:212.4,upside:-.5132,ccy:"USD",
+     wacc:[.09,.10,.11],tg:[.02,.025,.03],
+     grid:[[112.99,119.92,128.01],[98.33,103.4,109.19],[86.93,90.76,95.08]]},
+   drivers:{text:"Services revenue and an expanding installed base of active devices, complemented by new product categories.",cite:1},
+   risks:{text:"Intense competition, dependence on iPhone sales, supply-chain concentration in Asia, and foreign-currency volatility.",cite:2},
+   checks:[{level:"ok",code:"CFO_VS_NI",message:"Operating cash flow is 117% of net income — earnings quality is sound."},
+           {level:"ok",code:"GROWTH_ASSUMPTION",message:"Forward growth of 5% is consistent with the 2% historical revenue CAGR."}],
+   citations:[{n:1,doc:"Apple FY2025 Form 10-K (mock)",section:"MD&A — Growth Drivers",page:24,as_of:"2025-09-30",
+       quote:"Services revenue and the expanding installed base of active devices are the primary growth drivers, complemented by new product categories."},
+     {n:2,doc:"Apple FY2025 Form 10-K (mock)",section:"Item 1A — Risk Factors",page:9,as_of:"2025-09-30",
+       quote:"Principal risks include intense competition, dependence on iPhone sales, supply-chain concentration in Asia, and foreign-currency volatility that can dampen growth."}]},
+
+ "FPT":{name:"FPT Corporation",ticker:"FPT",exchange:"HOSE",currency:"VND",sector:"Information Technology",
+   asof:"FY2025 · priced 12 Jun 2026",
+   rating:"Under review",ratingClass:"amber",ratingLabel:"assumption flagged",
+   price:135000,
+   summary:`FPT is the clearest demonstration of the model's discipline. The forward growth assumption of <span class="fig">24%</span> sits well above the <span class="fig">12% historical revenue CAGR</span>, and our verification gate raises an <span class="fig">ALERT</span>: the DCF should not be relied upon until that assumption is independently justified. Tellingly, management's own filing targets ">20% per year" growth yet cautions it "may not be achievable if global IT spending slows" — a caveat the retrieval layer surfaces on its own. Underlying quality is strong (27.4% ROE, 15% net margin, cash flow ~95% of earnings); the issue is the input, not the business.`,
+   ratios:{net_margin:.15,roe:.2735,roa:.1292,debt_to_equity:.5294,eps:6.3265,pe:21338.71},
+   revHist:[[2022,44000],[2023,52600],[2024,57500],[2025,62000]],
+   dcf:{base:116.67,low:96.21,high:147.33,price:135000,upside:-.9991,ccy:"VND",offScale:true,
+     wacc:[.09,.10,.11],tg:[.02,.025,.03],
+     grid:[[128.5,137.19,147.33],[110.31,116.67,123.93],[96.21,101.02,106.43]]},
+   drivers:{text:"A target of >20% annual revenue growth powered by global IT-services demand, AI and cloud adoption, and expansion in Japan, the US and Europe.",cite:2},
+   risks:{text:"Client concentration, engineer wage inflation and FX exposure on overseas contracts — and the growth target may not hold if global IT spending slows.",cite:1},
+   checks:[{level:"ok",code:"CFO_VS_NI",message:"Operating cash flow is 95% of net income — earnings quality is sound."},
+           {level:"alert",code:"GROWTH_ASSUMPTION",message:"Forward growth assumption of 24% is well above the 12% historical revenue CAGR — verify before relying on the DCF."}],
+   citations:[{n:1,doc:"FPT FY2025 Financial Report (mock)",section:"Risk Factors",page:41,as_of:"2025-12-31",
+       quote:"Principal risks include reliance on a concentrated set of large outsourcing clients, talent retention and engineer wage inflation, and currency exposure on overseas contracts. The ambitious growth targets may not be achievable if global IT spending slows."},
+     {n:2,doc:"FPT FY2025 Financial Report (mock)",section:"Strategy — Growth Drivers",page:19,as_of:"2025-12-31",
+       quote:"Management targets sustained revenue growth above 20% per year, driven by global IT-services demand, AI and cloud adoption, and expansion in Japan, the United States and Europe."}]}
+};
+
+const pct = x => (x*100).toFixed(Math.abs(x)>=1?0:1)+"%";
+const sgn = x => (x>=0?"+":"−")+pct(Math.abs(x));
+const num = x => x.toLocaleString(undefined,{maximumFractionDigits:2});
+
+function render(t){
+  const d=DATA[t], v=d.dcf, r=d.ratios;
+  const upClass = d.dcf.offScale ? "amber" : (v.upside>=0?"green":"red");
+  const upVal = d.dcf.offScale ? "Flagged" : sgn(v.upside);
+
+  // valuation bar
+  let bar="";
+  if(!v.offScale){
+    const dmin=Math.min(v.low,d.price), dmax=Math.max(v.high,d.price), span=(dmax-dmin)||1;
+    const P=x=>((x-dmin)/span*100);
+    bar=`<div class="vtrack">
+        <div class="vband" style="left:${P(v.low)}%;width:${P(v.high)-P(v.low)}%"></div>
+        <div class="vt base" style="left:${P(v.base)}%"><span class="cap">fair value ${num(v.base)}</span></div>
+        <div class="vt price" style="left:${P(d.price)}%"><span class="cap">price ${num(d.price)}</span></div>
+      </div>
+      <div class="vends"><span>low ${num(v.low)}</span><span>high ${num(v.high)}</span></div>`;
+  } else {
+    const dmin=v.low, dmax=v.high, span=(dmax-dmin)||1, P=x=>((x-dmin)/span*100);
+    bar=`<div class="vtrack">
+        <div class="vband" style="left:0%;width:100%"></div>
+        <div class="vt base" style="left:${P(v.base)}%"><span class="cap">fair value ${num(v.base)}</span></div>
+      </div>
+      <div class="vends"><span>low ${num(v.low)}</span><span>high ${num(v.high)}</span></div>
+      <div class="offnote">Quoted price ${num(d.price)} ${d.currency} is on a different unit basis to the per-share DCF in this illustrative dataset, so no implied upside is shown.</div>`;
+  }
+
+  // sensitivity heat
+  const g=v.grid, flat=g.flat(), lo=Math.min(...flat), hi=Math.max(...flat);
+  const col=val=>{const f=(val-lo)/((hi-lo)||1);
+    return `background:rgba(23,59,99,${(0.06+f*0.20).toFixed(3)})`;};
+  const heat=`<table class="heat"><tr><th></th>${v.tg.map(x=>`<th>g ${pct(x)}</th>`).join("")}</tr>`+
+    g.map((row,i)=>`<tr><th>WACC ${pct(v.wacc[i])}</th>`+row.map(c=>`<td style="${col(c)}">${num(c)}</td>`).join("")+`</tr>`).join("")+
+    `<caption>Intrinsic value per share (${v.ccy}) across discount rate and terminal growth.</caption></table>`;
+
+  // ratios table
+  const rows=[["Net margin",pct(r.net_margin)],["Return on equity",pct(r.roe)],["Return on assets",pct(r.roa)],
+    ["Debt / equity",r.debt_to_equity.toFixed(2)+"x"],["EPS",num(r.eps)+" "+d.currency],["P / E",num(r.pe)+"x"]];
+  const fin=`<table class="fin">`+rows.map(([k,vv])=>`<tr><td class="k">${k}</td><td class="v">${vv}</td></tr>`).join("")+`</table>`;
+
+  // revenue
+  const mx=Math.max(...d.revHist.map(x=>x[1]));
+  const bars=`<div class="bars">`+d.revHist.map(([yr,amt])=>
+    `<div class="bar"><div class="amt">${(amt/1000).toFixed(1)}k</div>
+       <div class="col" style="height:${Math.max(8,amt/mx*100)}%"></div><div class="yr">${yr}</div></div>`).join("")+`</div>`;
+
+  // checks
+  const checks=d.checks.map(c=>
+    `<div class="chk"><span class="cflag ${c.level}">${c.level}</span><div>${c.message}</div></div>`).join("");
+
+  // sources
+  const sources=d.citations.map(c=>
+    `<div class="src"><div class="h">[${c.n}] <b>${c.doc}</b> — ${c.section}, p.${c.page} (${c.as_of})</div>
+      <div class="q">${c.quote}</div></div>`).join("");
+
+  document.getElementById("note").innerHTML=`
+    <div class="mast">
+      <div><div class="firm">Aurora Research</div><div class="kind">Equity Research · Company Note</div></div>
+      <div class="meta">${d.asof}<br/>Analyst: Research Assistant (automated)</div>
+    </div>
+
+    <div class="titlerow">
+      <div><h1 class="serif">${d.name}</h1>
+        <div class="sub">${d.ticker} · ${d.exchange} · ${d.sector} · reporting in ${d.currency}</div></div>
+      <div class="rating ${d.ratingClass}"><div class="r serif">${d.rating}</div><div class="rl">${d.ratingLabel}</div></div>
+    </div>
+
+    <div class="snap">
+      <div><div class="k">Current price</div><div class="v">${num(d.price)}</div></div>
+      <div><div class="k">Fair value (base)</div><div class="v">${num(v.base)}</div></div>
+      <div><div class="k">Value range</div><div class="v" style="font-size:16px">${num(v.low)}–${num(v.high)}</div></div>
+      <div><div class="k">Implied upside</div><div class="v ${upClass}">${upVal}</div></div>
+    </div>
+
+    <section><h2 class="sec">Investment view</h2><p class="lead">${d.summary}</p></section>
+
+    <section><h2 class="sec">Valuation</h2>
+      <div class="cols">
+        <div>${bar}</div>
+        <div>${heat}</div>
+      </div>
+    </section>
+
+    <section><h2 class="sec">Financial snapshot</h2>
+      <div class="cols">
+        <div>${fin}</div>
+        <div><div class="colh" style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Revenue, ${d.currency} m</div>${bars}</div>
+      </div>
+    </section>
+
+    <section><h2 class="sec">Thesis &amp; risks</h2>
+      <div class="cols">
+        <div><div class="colh">Growth drivers</div><p style="margin:0">${d.drivers.text}<sup class="c">[${d.drivers.cite}]</sup></p></div>
+        <div><div class="colh">Key risks</div><p style="margin:0">${d.risks.text}<sup class="c">[${d.risks.cite}]</sup></p></div>
+      </div>
+    </section>
+
+    <section><h2 class="sec">Model &amp; data checks</h2>${checks}</section>
+
+    <section><h2 class="sec">Sources</h2>${sources}</section>
+
+    <div class="disc">Every figure in this note is produced by a deterministic calculation engine; the AI layer composes the narrative but does not originate numbers. Qualitative claims are grounded in the retrieved source passages cited above — where no source supports a claim, it is not made. Illustrative mock data for demonstration only. Not investment advice.</div>
+  `;
+  document.querySelectorAll(".tab").forEach(el=>el.classList.toggle("active",el.dataset.t===t));
+}
+
+const tabs=document.getElementById("tabs");
+Object.keys(DATA).forEach(t=>{const b=document.createElement("div");
+  b.className="tab";b.dataset.t=t;b.textContent=t;b.onclick=()=>render(t);tabs.appendChild(b);});
+render("D05.SI");
+</script>
+</body>
+</html>
